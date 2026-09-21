@@ -1,6 +1,7 @@
 # Miscellaneous
 *.class
 *.log
+*.hprof
 *.pyc
 *.swp
 .DS_Store
@@ -246,4 +247,3 @@ firestore-debug.log
 
 # App specific
 # Add any app-specific files that shouldn't be versioned
-
