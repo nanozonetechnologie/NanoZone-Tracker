@@ -13,8 +13,10 @@ class FeatureProvider with ChangeNotifier {
   };
 
   bool _isInitialized = false;
+  ThemeMode _themeMode = ThemeMode.system;
 
   Map<String, bool> get features => {..._features};
+  ThemeMode get themeMode => _themeMode;
 
   bool isFeatureEnabled(String featureKey) {
     return _features[featureKey] ?? false;
@@ -27,9 +29,26 @@ class FeatureProvider with ChangeNotifier {
     for (String key in _features.keys) {
       _features[key] = prefs.getBool(prefKeyPrefix + key) ?? _features[key]!;
     }
+
+    final themeStr = prefs.getString('theme_mode') ?? 'system';
+    if (themeStr == 'light') {
+      _themeMode = ThemeMode.light;
+    } else if (themeStr == 'dark') {
+      _themeMode = ThemeMode.dark;
+    } else {
+      _themeMode = ThemeMode.system;
+    }
     
     _isInitialized = true;
     notifyListeners();
+  }
+
+  Future<void> setThemeMode(ThemeMode mode) async {
+    _themeMode = mode;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    final str = mode == ThemeMode.light ? 'light' : (mode == ThemeMode.dark ? 'dark' : 'system');
+    await prefs.setString('theme_mode', str);
   }
 
   Future<void> toggleFeature(String featureKey, bool value) async {

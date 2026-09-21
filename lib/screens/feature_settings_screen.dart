@@ -3,6 +3,7 @@ import 'package:exptrackerforhybridos/theme/app_theme.dart';
 import 'package:exptrackerforhybridos/screens/accounts_screen.dart';
 import 'package:exptrackerforhybridos/screens/backup_screen.dart';
 import 'package:exptrackerforhybridos/screens/help_screen.dart';
+import 'package:exptrackerforhybridos/widgets/feature_tour_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -146,6 +147,55 @@ class _FeatureSettingsScreenState extends State<FeatureSettingsScreen> {
                       icon: Icons.sd_storage_rounded,
                       color: const Color(0xFF10B981),
                       screen: const BackupScreen(),
+                    ),
+                    const SizedBox(height: 12),
+                    GestureDetector(
+                      onTap: () => FeatureTourOverlay.forceShow(context),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: AppTheme.cardDecoration(context),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEC4899).withAlpha(20),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: const Icon(Icons.tips_and_updates_rounded, color: Color(0xFFEC4899), size: 24),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Replay Feature Popups',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w800,
+                                      color: isDark ? AppTheme.textPrimaryDark : AppTheme.textPrimaryLight,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Step-by-step popup guide for budget & features',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: isDark ? AppTheme.textSecondaryDark : AppTheme.textSecondaryLight,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Icon(
+                              Icons.chevron_right_rounded,
+                              color: isDark ? AppTheme.textSecondaryDark : AppTheme.textSecondaryLight,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 12),
                     _buildNavigationCard(

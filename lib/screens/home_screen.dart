@@ -1,23 +1,166 @@
 import 'package:exptrackerforhybridos/providers/expense_provider.dart';
 import 'package:exptrackerforhybridos/providers/budget_provider.dart';
-import 'package:exptrackerforhybridos/providers/account_provider.dart';
 import 'package:exptrackerforhybridos/theme/app_theme.dart';
-import 'package:exptrackerforhybridos/widgets/voice_input_widget.dart';
 import 'package:exptrackerforhybridos/screens/view_all_expenses_screen.dart';
 import 'package:exptrackerforhybridos/screens/dashboard_screen.dart';
 import 'package:exptrackerforhybridos/screens/savings_tracker_screen.dart';
-import 'package:exptrackerforhybridos/screens/accounts_screen.dart';
 import 'package:exptrackerforhybridos/screens/feature_settings_screen.dart';
 import 'package:exptrackerforhybridos/screens/savings_goals_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:exptrackerforhybridos/widgets/feature_tour_overlay.dart';
 import '../providers/feature_provider.dart';
-import 'add_expense_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  // Customizable Daily Favorite Presets
+  final List<Map<String, dynamic>> _quickPresets = [
+    {'key': 'coffee', 'title': 'Coffee', 'amount': 50.0, 'category': 'Food & Dining', 'icon': Icons.coffee_rounded, 'color': const Color(0xFF8D6E63)},
+    {'key': 'meal', 'title': 'Meal', 'amount': 150.0, 'category': 'Food & Dining', 'icon': Icons.restaurant_rounded, 'color': const Color(0xFFFF5252)},
+    {'key': 'fuel', 'title': 'Fuel', 'amount': 200.0, 'category': 'Fuel', 'icon': Icons.local_gas_station_rounded, 'color': const Color(0xFFFF7043)},
+    {'key': 'grocery', 'title': 'Grocery', 'amount': 500.0, 'category': 'Groceries', 'icon': Icons.shopping_cart_rounded, 'color': const Color(0xFF00C853)},
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCustomPresetAmounts();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FeatureTourOverlay.showIfFirstTime(context);
+    });
+  }
+
+  Future<void> _loadCustomPresetAmounts() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      setState(() {
+        for (var preset in _quickPresets) {
+          final key = preset['key'] as String;
+          final savedAmount = prefs.getDouble('preset_amount_$key');
+          final savedTitle = prefs.getString('preset_title_$key');
+          if (savedAmount != null) {
+            preset['amount'] = savedAmount;
+          }
+          if (savedTitle != null && savedTitle.isNotEmpty) {
+            preset['title'] = savedTitle;
+          }
+        }
+      });
+    } catch (_) {}
+  }
+
+  Future<void> _saveCustomPreset(int index, String title, double amount) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = _quickPresets[index]['key'] as String;
+      await prefs.setDouble('preset_amount_$key', amount);
+      await prefs.setString('preset_title_$key', title);
+      setState(() {
+        _quickPresets[index]['title'] = title;
+        _quickPresets[index]['amount'] = amount;
+      });
+    } catch (_) {}
+  }
+
+  void _showCustomizePresetSheet(BuildContext context, int index) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final preset = _quickPresets[index];
+    final titleController = TextEditingController(text: preset['title'] as String);
+    final amountController = TextEditingController(text: (preset['amount'] as double).toStringAsFixed(0));
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: isDark ? AppTheme.surfaceDark : AppTheme.surfaceLight,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(color: Colors.grey.withAlpha(80), borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: (preset['color'] as Color).withAlpha(20), shape: BoxShape.circle),
+                  child: Icon(preset['icon'] as IconData, color: preset['color'] as Color, size: 24),
+                ),
+                const SizedBox(width: 14),
+                const Text('Customize Preset', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+              ],
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: titleController,
+              decoration: const InputDecoration(labelText: 'Preset Name', prefixIcon: Icon(Icons.edit_rounded)),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: amountController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'Default Price', prefixText: '₹ ', prefixIcon: Icon(Icons.currency_rupee_rounded)),
+            ),
+            const SizedBox(height: 28),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Cancel'),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      final newTitle = titleController.text.trim();
+                      final newAmount = double.tryParse(amountController.text.trim());
+                      if (newTitle.isNotEmpty && newAmount != null && newAmount > 0) {
+                        _saveCustomPreset(index, newTitle, newAmount);
+                        Navigator.pop(ctx);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Updated $newTitle default price to ₹${newAmount.toStringAsFixed(0)}'),
+                            backgroundColor: AppTheme.successColor,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            margin: const EdgeInsets.all(16),
+                          ),
+                        );
+                      }
+                    },
+                    child: const Text('Save Preset'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +168,6 @@ class HomeScreen extends StatelessWidget {
     final expenseProvider = Provider.of<ExpenseProvider>(context);
     final budgetProvider = Provider.of<BudgetProvider>(context);
     final featureProvider = Provider.of<FeatureProvider>(context);
-    final accountProvider = Provider.of<AccountProvider>(context);
     
     final recentExpenses = expenseProvider.items.take(5).toList();
     
@@ -62,34 +204,24 @@ class HomeScreen extends StatelessWidget {
           // Hero Summary Card
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
               child: _buildHeroCard(context, remainingBalance, currentBudget, monthlySpent, progressPercent, isDark),
             ),
           ),
 
-          // Accounts / Wallet Shortcut Bar
+          // 1-Tap Quick Expense Presets
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-              child: _buildWalletShortcut(context, accountProvider, isDark),
+              child: _buildQuickPresetBar(context, isDark),
             ),
           ),
 
           // Quick Modules Section
-          SliverToBoxAdapter(
+          const SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 28, 20, 14),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Quick Access', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
-                  TextButton.icon(
-                    onPressed: () => _showVoiceInput(context), 
-                    icon: const Icon(Icons.mic_rounded, size: 18, color: AppTheme.primaryColor),
-                    label: const Text('Voice Add', style: TextStyle(fontWeight: FontWeight.w800, color: AppTheme.primaryColor)),
-                  ),
-                ],
-              ),
+              padding: EdgeInsets.fromLTRB(20, 24, 20, 12),
+              child: Text('Quick Access', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
             ),
           ),
           
@@ -115,7 +247,7 @@ class HomeScreen extends StatelessWidget {
           // Recent Activity Section
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 32, 20, 14),
+              padding: const EdgeInsets.fromLTRB(20, 28, 20, 12),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -130,7 +262,7 @@ class HomeScreen extends StatelessWidget {
           ),
 
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 160),
             sliver: recentExpenses.isEmpty
                 ? SliverToBoxAdapter(
                     child: Container(
@@ -161,30 +293,85 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildHeader(BuildContext context, bool isDark) {
     return SliverAppBar(
-      expandedHeight: 110,
+      expandedHeight: 90,
       floating: false,
       pinned: true,
       backgroundColor: isDark ? AppTheme.backgroundDark : AppTheme.backgroundLight,
       elevation: 0,
       flexibleSpace: FlexibleSpaceBar(
-        titlePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        titlePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         centerTitle: false,
-        title: Column(
+        title: Row(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(_getGreeting(), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppTheme.primaryColor, letterSpacing: 1.2)),
-            const Text('NanoZone Tracker', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
+            Container(
+              width: 28,
+              height: 32,
+              decoration: BoxDecoration(
+                color: isDark ? AppTheme.cardDark : Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: AppTheme.shadowSmall,
+              ),
+              padding: const EdgeInsets.all(3),
+              child: Image.asset(
+                'assets/logo.png',
+                fit: BoxFit.contain,
+                errorBuilder: (c, e, s) => Image.asset('assets/app_logo.png', fit: BoxFit.contain),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _getGreeting(),
+                  style: TextStyle(
+                    fontSize: 7.0,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? AppTheme.textSecondaryDark : AppTheme.textSecondaryLight,
+                    letterSpacing: 0.6,
+                  ),
+                ),
+                RichText(
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: 'Nano',
+                        style: TextStyle(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w900,
+                          color: isDark ? Colors.white : AppTheme.textPrimaryLight,
+                          letterSpacing: -0.4,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                      const TextSpan(
+                        text: 'Zone',
+                        style: TextStyle(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w900,
+                          color: AppTheme.secondaryColor,
+                          letterSpacing: -0.4,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
       actions: [
         IconButton(
           onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeatureSettingsScreen())),
-          icon: const Icon(Icons.settings_suggest_rounded, size: 24),
+          icon: const Icon(Icons.settings_suggest_rounded, size: 22),
           style: IconButton.styleFrom(
             backgroundColor: isDark ? Colors.white10 : Colors.black.withAlpha(8),
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(8),
           ),
         ),
         const SizedBox(width: 16),
@@ -204,7 +391,7 @@ class HomeScreen extends StatelessWidget {
     
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(24, 28, 24, 28),
+      padding: const EdgeInsets.fromLTRB(24, 26, 24, 26),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isNegative 
@@ -244,22 +431,21 @@ class HomeScreen extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
               '₹${remainingBalance.abs().toStringAsFixed(0)}', 
               style: const TextStyle(
                 color: Colors.white, 
-                fontSize: 42, 
+                fontSize: 40, 
                 fontWeight: FontWeight.w900, 
                 letterSpacing: -1.5
               )
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
           
-          // Progress Gauge Bar
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: LinearProgressIndicator(
@@ -270,7 +456,7 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
           
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
           Row(
             children: [
               Expanded(
@@ -328,54 +514,76 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildWalletShortcut(BuildContext context, AccountProvider accountProvider, bool isDark) {
-    final accounts = accountProvider.accounts;
-    final bankBalance = accountProvider.totalBankBalance;
-
-    return GestureDetector(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AccountsScreen())),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: AppTheme.cardDecoration(context),
-        child: Row(
+  Widget _buildQuickPresetBar(BuildContext context, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppTheme.secondaryColor.withAlpha(20),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const Icon(Icons.account_balance_rounded, color: AppTheme.secondaryColor, size: 24),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'My Wallet & Accounts',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                      color: isDark ? AppTheme.textPrimaryDark : AppTheme.textPrimaryLight,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${accounts.length} linked accounts • ₹${bankBalance.toStringAsFixed(0)} total',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: isDark ? AppTheme.textSecondaryDark : AppTheme.textSecondaryLight,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_right_rounded, color: Colors.grey),
+            const Text('1-Tap Quick Add', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.primaryColor)),
+            Text('Hold to customize', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: isDark ? AppTheme.textSecondaryDark : AppTheme.textSecondaryLight)),
           ],
         ),
-      ),
+        const SizedBox(height: 10),
+        Row(
+          children: List.generate(_quickPresets.length, (index) {
+            final preset = _quickPresets[index];
+            final title = preset['title'] as String;
+            final amount = preset['amount'] as double;
+            final category = preset['category'] as String;
+            final icon = preset['icon'] as IconData;
+            final color = preset['color'] as Color;
+
+            return Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  HapticFeedback.mediumImpact();
+                  final expenseProvider = Provider.of<ExpenseProvider>(context, listen: false);
+                  expenseProvider.addExpense(amount, category, DateTime.now(), 'UPI', title);
+                  
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Row(
+                        children: [
+                          const Icon(Icons.check_circle_rounded, color: Colors.white),
+                          const SizedBox(width: 12),
+                          Text('Logged ₹${amount.toStringAsFixed(0)} for $title!'),
+                        ],
+                      ),
+                      backgroundColor: AppTheme.successColor,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      margin: const EdgeInsets.all(16),
+                    ),
+                  );
+                },
+                onLongPress: () {
+                  HapticFeedback.heavyImpact();
+                  _showCustomizePresetSheet(context, index);
+                },
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+                  decoration: AppTheme.cardDecoration(context),
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(color: color.withAlpha(20), shape: BoxShape.circle),
+                        child: Icon(icon, color: color, size: 18),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(title, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800), maxLines: 1, overflow: TextOverflow.ellipsis),
+                      Text('₹${amount.toStringAsFixed(0)}', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: color)),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }),
+        ),
+      ],
     );
   }
 
@@ -433,27 +641,6 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  void _showVoiceInput(BuildContext context) async {
-    final result = await showVoiceInputSheet(context);
-    if (result != null && result.isValid && context.mounted) {
-      await Future.delayed(const Duration(milliseconds: 300));
-      if (!context.mounted) return;
-
-      showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (ctx) => AddExpenseScreen(
-          prefilledAmount: result.amount,
-          prefilledCategory: result.category,
-          prefilledPaymentMethod: result.paymentMethod,
-          prefilledNotes: result.notes,
-          prefilledDate: result.date,
-        ),
-      );
-    }
   }
 
   String _getGreeting() {

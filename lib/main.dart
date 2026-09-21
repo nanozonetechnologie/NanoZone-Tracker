@@ -15,7 +15,6 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:exptrackerforhybridos/helpers/notification_helper.dart';
 import 'package:exptrackerforhybridos/helpers/db_helper.dart';
 
-/// Main entry point - Must be ultra-lightweight
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -44,17 +43,35 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => FeatureProvider(), lazy: true),
       ],
       child: const AppInitializer(
-        child: MaterialApp(
-          title: 'NanoZone Budget Tracker',
-          debugShowCheckedModeBanner: false,
-          home: SplashScreen(),
-        ),
+        child: SplashRouter(),
       ),
     );
   }
 }
 
-/// AppInitializer widget that has access to providers
+class SplashRouter extends StatelessWidget {
+  const SplashRouter({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final featureProvider = Provider.of<FeatureProvider>(context);
+
+    return MaterialApp(
+      title: 'Budget Tracker',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: featureProvider.themeMode,
+      routes: {
+        '/': (context) => const SplashScreen(),
+        '/home': (context) => const MainNavigationScreen(),
+        '/settings': (context) => const FeatureSettingsScreen(),
+      },
+      initialRoute: '/',
+    );
+  }
+}
+
 class AppInitializer extends StatefulWidget {
   final Widget child;
 
@@ -150,18 +167,6 @@ class _AppInitializerState extends State<AppInitializer> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'NanoZone Budget Tracker',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
-      routes: {
-        '/': (context) => const SplashScreen(),
-        '/home': (context) => const MainNavigationScreen(),
-        '/settings': (context) => const FeatureSettingsScreen(),
-      },
-      initialRoute: '/',
-    );
+    return widget.child;
   }
 }
