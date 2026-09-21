@@ -1,0 +1,249 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# iOS/macOS
+**/ios/**/*.mode1v3
+**/ios/**/*.mode2v3
+**/ios/**/*.moved-aside
+**/ios/**/*.pbxuser
+**/ios/**/*.perspectivev3
+**/ios/**/*sync/
+**/ios/**/.sconsign.dblite
+**/ios/**/.tags*
+**/ios/**/.vagrant/
+**/ios/**/DerivedData/
+**/ios/**/Icon?
+**/ios/**/Pods/
+**/ios/**/.symlinks/
+**/ios/**/profile
+**/ios/**/xcuserdata
+**/ios/.generated/
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/ephemeral
+**/ios/Flutter/app.flx
+**/ios/Flutter/app.zip
+**/ios/Flutter/flutter_assets/
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/ServiceDefinitions.json
+**/ios/Runner/GeneratedPluginRegistrant.*
+
+# macOS
+**/macos/Flutter/GeneratedPluginRegistrant.swift
+**/macos/Flutter/ephemeral
+**/macos/Pods/
+**/macos/**/.symlinks/
+**/macos/**/xcuserdata
+
+# Coverage
+coverage/
+
+# Exceptions to above rules.
+!**/ios/**/default.mode1v3
+!**/ios/**/default.mode2v3
+!**/ios/**/default.pbxuser
+!**/ios/**/default.perspectivev3
+
+# Build files
+build/
+**/build/
+ios/build/
+macos/build/
+android/build/
+android/app/build/
+.dart_tool/build/
+
+# Android local configuration
+android/local.properties
+android/.gradle/
+android/gradle.properties
+android/gradlew
+android/gradlew.bat
+
+# Generated files
+*.g.dart
+*.freezed.dart
+*.mocks.dart
+
+# IDE
+.vscode/
+.idea/
+*.iml
+*.iws
+
+# Pods
+Pods/
+Podfile.lock
+.symlinks/
+
+# macOS
+.DS_Store
+
+# Git backups
+.git_backup*/
+
+# Documentation files (optional - remove these lines if you want to track them)
+COMPLETE_FIX_SUMMARY.md
+FRESH_REPO_SUCCESS.md
+PUSH_TO_GITHUB.sh
+
+# Object files and libraries
+*.o
+*.a
+*.dylib
+*.so
+*.framework
+*.xcframework
+
+# Makefiles and build system
+Makefile
+*.make
+*.stamp
+*.d
+*.tbd
+*.modulemap
+
+# Build intermediates
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.xcuserstate
+project.xcworkspace/
+xcuserdata/
+
+# DerivedData
+DerivedData/
+*/DerivedData/
+
+# Podfiles
+ios/Podfile.lock
+macos/Podfile.lock
+ios/.symlinks/
+macos/.symlinks/
+
+# Generated files
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/GeneratedPluginRegistrant.h
+**/GeneratedPluginRegistrant.m
+**/GeneratedPluginRegistrant.swift
+
+# Database files (if you want to keep them out of version control)
+# Uncomment these if you don't want to version your database
+# *.db
+# *.sqlite
+# *.sqlite3
+
+# Backup files
+*.backup
+*.bak
+*~
+
+# Environment files (if you add any API keys)
+.env
+.env.local
+.env.*.local
+
+# Test coverage
+coverage/
+test/.test_coverage.dart
+
+# Web build (if not deploying via GitHub)
+# web/
+
+# Documentation build files
+doc/api/
+
+# Custom generated files
+generate_ios_icons.sh
+GITHUB_AUTH_SETUP.md
+IOS_BUILD_FIX_SUMMARY.md
+IOS_BACKUP_TESTING_GUIDE.md
+IOS_CUSTOM_ICON_GUIDE.md
+COMPLETE_FIX_SUMMARY.md
+
+# IDE specific
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+
+# Node modules (if using any web components)
+node_modules/
+
+# Firebase (if using)
+.firebase/
+firebase-debug.log
+firestore-debug.log
+
+# Fastlane (if using for iOS deployment)
+**/fastlane/report.xml
+**/fastlane/Preview.html
+**/fastlane/screenshots
+**/fastlane/test_output
+
+# App specific
+# Add any app-specific files that shouldn't be versioned
+
